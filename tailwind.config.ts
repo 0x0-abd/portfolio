@@ -8,6 +8,13 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        'background': '#141a1e',
+      },
+      fontFamily: {
+        poppins: ['var(--font-poppins)'],
+        quicksand: ['var(--font-quicksand)'],
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
