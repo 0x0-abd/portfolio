@@ -134,7 +134,7 @@ text {
 }
 
 .introtexts {
-  transform: translate(calc(50vw - 40vw), calc(50vh - 100px));
+  transform: translate(calc(50vw - 40vw), calc(50vh - 70px));
   fill:#000;
   text-rendering: geometricPrecision;
 }
@@ -161,6 +161,15 @@ text {
   transition: transform 0.3s -0.1s cubic-bezier(0.68, -0.6, 0.32, 1.6);
   transform: translate(25px, 25px) scale(1.25);
   transform-origin: 100px 100px;
+}
+
+.intro-nav-logo {
+  width:250px;
+  height:250px;
+  left: calc(10vw + 250px);
+  top: calc(50vh - 100px);
+  transform: translate(-50%) translateX(-50%) scale(1);
+  z-index: 5;
 }
 
 .logo-intro {
@@ -256,22 +265,22 @@ text {
 }
 
 .logo-p1 {
-  stroke-dasharray: 128.82907104492188;
-  animation: draw 1.2s cubic-bezier(.33,.36,.84,.51), anim-fadein 0.15s 1.6s reverse forwards;
+  stroke-dasharray: 536.689453125;
+  animation: draw 1.2s cubic-bezier(.33,.36,.84,.51), anim-fadein 0.15s 1.6s linear reverse forwards;
   fill: none;
 }
 
 @keyframes draw {
   0% {
-    stroke-dashoffset: 128.82907104492188;
+    stroke-dashoffset: 536.689453125;
     fill-opacity: 0.9;
   }
-  10% {
-    stroke-dashoffset: 128.82907104492188;
-    /* fill-opacity: 0.9; */
-  }
+  /* 10% {
+    stroke-dashoffset: 536.689453125;
+     fill-opacity: 0.9; 
+  } */
   100% {
-    stroke-dashoffset: 0;
+    stroke-dashoffset: 400;
     fill-opacity: 1;
   }
 }
@@ -357,7 +366,20 @@ text {
   .header {
     font-variation-settings: "wght" 500;
     font-size: 62px;
-    transform: translate(280px, 150px);
+    transform: translate(270px, 150px);
+  }
+
+  .subheader {
+    font-variation-settings: "wght" 300;
+    font-size: 30px;
+    transform: var(--offset);
+    --offset: translate(238px, 230px);
+  }
+
+  .intro-nav-logo {
+    left: calc(50vw - 10px);
+    top: calc(30vh - 60px);
+    transform: translate(calc(0px - 115px), calc(0vh - 63px)) scale(0.8);
   }
 }
 
@@ -370,8 +392,17 @@ text {
   }
  
   .introtexts {
-    transform: translate(calc(50vw - 450px), calc(50vh - 100px));
+    transform: translate(calc(50vw - 450px), calc(50vh - 70px));
     fill:#000;
     text-rendering: geometricPrecision;
   }
+
+  .intro-nav-logo {
+    left: calc(50vw + 250px - 450px);
+  }
+}
+
+.home-main {
+  top: -48px;
+  position: relative;
 }

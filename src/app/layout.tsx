@@ -6,6 +6,7 @@ import SplashScreen from "./SplashScreen";
 import "./globals.css";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import AnimatedTabs from "./components/navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -59,6 +60,7 @@ export default function RootLayout({
           <>
 
             <div className="realbody relative h-full w-full">
+              <AnimatedTabs />
               <div className="canvas-wrap -z-50 fixed top-0 left-0 h-full w-full opacity-0">
                 <canvas />
               </div>
@@ -66,6 +68,7 @@ export default function RootLayout({
               {children}
 
             </div>
+            <title>Abhyuday Shukla | Home</title>
             <Script src="/bg.js"></Script>
 
           </>
