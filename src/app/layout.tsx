@@ -70,7 +70,7 @@ export default function RootLayout({
 
             </div>
             
-            <Script src="/bg.js"></Script>
+            <Script src="./bg.js"></Script>
 
           </>
         )}

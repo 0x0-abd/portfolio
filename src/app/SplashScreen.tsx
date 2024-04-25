@@ -27,7 +27,7 @@ function SplashScreen({ finishLoading }: { finishLoading: any }) {
             {/* <img className='splash-bg-img absolute h-48 w-48 mb-12' src="bg.png"/> */}
             <div className='splash-bg-img absolute h-48 w-48 mb-12'>
                 <Image
-                    src="/bg.png"
+                    src="./bg.png"
                     alt="BG Placeholder"
                     fill
                 />
