@@ -39,7 +39,7 @@ function Projects() {
                 <Link href="https://github.com/0x0-abd/ISDL">
                   <Image
                     className="duration-200 blur-[1.5px] hover:blur-[1px] rounded-xl"
-                    src="./gfc.png"
+                    src="/gfc.png"
                     alt="Grocery and Fruits Shop"
                     height={1200}
                     width={1200}
@@ -66,7 +66,7 @@ function Projects() {
                 <Link href="https://github.com/0x0-abd/Hyperspectral-Image-Analysis">
                   <Image
                     className="duration-200 blur-[1.5px] hover:blur-[1px] rounded-xl"
-                    src="./hsi.png"
+                    src="/hsi.png"
                     alt="Hyperspectral Image Analysis"
                     height={1200}
                     width={1200}
