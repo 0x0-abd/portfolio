@@ -406,3 +406,26 @@ text {
   top: -48px;
   position: relative;
 }
+
+@keyframes anim-linkout {
+  0% {
+    -webkit-clip-path: inset(0% 0% 0% 0% round 8px);
+    clip-path: inset(0% 0% 0% 0% round 8px);
+  }
+  100% {
+    -webkit-clip-path: inset(0% 0% 0% 100% round 8px);
+    clip-path: inset(0% 0% 0% 100% round 8px);
+  }
+}
+
+@supports ((-webkit-backdrop-filter: invert(1)) or (backdrop-filter:invert(1))) {
+  .link-animate ::after {
+    background: transparent;
+    mix-blend-mode: normal;
+    -webkit-backdrop-filter: invert(1);
+    backdrop-filter:invert(1);
+    animation: anim-linkout 0.2s forwards ease;
+    position: absolute;
+  }
+}
+

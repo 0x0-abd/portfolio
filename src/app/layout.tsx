@@ -52,6 +52,7 @@ export default function RootLayout({
           sizes="png"
         />
       </head>
+      <title>Abhyuday Shukla</title>
       <body className={`${inter.className} ${poppins.variable} ${quicksand.variable}`}>
 
         {isLoading && isHome ? (
@@ -68,7 +69,7 @@ export default function RootLayout({
               {children}
 
             </div>
-            <title>Abhyuday Shukla | Home</title>
+            
             <Script src="/bg.js"></Script>
 
           </>
