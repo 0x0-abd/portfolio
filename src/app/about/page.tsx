@@ -50,13 +50,13 @@ function About() {
       <main className="home-main flex min-h-screen flex-col items-center justify-start space-y-20 p-8">
         <div className="z-10 max-w-4xl mt-20 w-11/12 items-center justify-between font-mono text-lg lg:flex">
 
-          Hey there! 👋 I'm Abhyuday, a Computer Science student deeply passionate about Web Development with Artificial Intelligence.
+          Hey there! 👋 I&apos;m Abhyuday, a Computer Science student deeply passionate about Web Development with Artificial Intelligence.
           Driven by curiosity and a thirst for innovation, I love crafting intuitive web applications and exploring the latest advancements in AI tech.
 
           <br />
           <br />
 
-          Let's collaborate and explore the endless possibilities at the intersection of tech and creativity!
+          Let&apos;s collaborate and explore the endless possibilities at the intersection of tech and creativity!
 
         </div>
 

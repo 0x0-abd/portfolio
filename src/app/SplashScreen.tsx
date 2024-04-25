@@ -24,7 +24,14 @@ function SplashScreen({ finishLoading }: { finishLoading: any }) {
         <>
             
             <div className="flex fixed min-h-screen flex-col items-center justify-center p-3 w-screen h-screen" style={{ backgroundColor: "#11161a" }}>
-            <img className='splash-bg-img absolute h-48 w-48 mb-12' src="bg.png"/>
+            {/* <img className='splash-bg-img absolute h-48 w-48 mb-12' src="bg.png"/> */}
+            <div className='splash-bg-img absolute h-48 w-48 mb-12'>
+                <Image
+                    src="/bg.png"
+                    alt="BG Placeholder"
+                    fill
+                />
+            </div>
             <svg viewBox="0 0 112.59 110.71" style={{height:"12rem", width:"12rem"}}>
                             <defs>
                                 <clipPath className='splash-bg-logo' id="splash-clip" width="0" height="0" clipPathUnits="objectBoundingBox">
