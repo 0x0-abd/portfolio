@@ -62,7 +62,7 @@ export default function RootLayout({
 
             <div className="realbody relative h-full w-full">
               <AnimatedTabs />
-              <div className="canvas-wrap -z-50 fixed top-0 left-0 h-full w-full opacity-0">
+              <div className="canvas-wrap z-0 fixed top-0 left-0 h-full w-full opacity-0">
                 <canvas />
               </div>
               

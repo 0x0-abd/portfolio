@@ -48,7 +48,7 @@ function About() {
       </div>
 
       <main className="home-main flex min-h-screen flex-col items-center justify-start space-y-20 p-8">
-        <div className="z-10 max-w-4xl mt-20 w-11/12 items-center justify-between font-mono text-lg lg:flex">
+        <div className="z-10 max-w-4xl mt-20 w-11/12 items-center justify-between font-mono text-lg lg:flex text-white">
 
           Hey there! 👋 I&apos;m Abhyuday, a Computer Science student deeply passionate about Web Development with Artificial Intelligence.
           Driven by curiosity and a thirst for innovation, I love crafting intuitive web applications and exploring the latest advancements in AI tech.

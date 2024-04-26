@@ -46,7 +46,7 @@ function Projects() {
                   />
                 </Link>
               </div>
-              <div className='w-full md:w-6/12 lg:w-7/12 pt-2'>
+              <div className='w-full md:w-6/12 lg:w-7/12 pt-2 text-white'>
                 A full-stack grocery website created using React, Bootstrap, NodeJs and MongoDB.
                 Customers can browse through products via category and order them from cart.
                 Admins can confirm the order and add new products.
@@ -73,7 +73,7 @@ function Projects() {
                   />
                 </Link>
               </div>
-              <div className='w-full md:w-6/12 lg:w-7/12 pt-2'>
+              <div className='w-full md:w-6/12 lg:w-7/12 pt-2 text-white'>
                 Hyperspectral Images have a huge potential in areas of Remote Sensing and Medical Diagnosis.
                 We created a Rough Set based Feature Selection method to overcome high dimentionality of these datasets with promising accuracy.
               </div>
