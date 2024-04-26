@@ -39,9 +39,9 @@ function Links() {
         <p className="mt-12 mb-12 text-blue-400 text-xl md:mt-4 md:mb-4"><Link href="https://github.com/0x0-abd">🔗 GitHub</Link></p>
         <p className="mt-12 mb-12 text-blue-400 text-xl md:mt-4 md:mb-4"><Link href="https://leetcode.com/nightdesert326/">🔗 LeetCode</Link></p>
         <p className="mt-12 mb-12 text-blue-400 block text-xl md:mt-4 md:mb-4"><Link href="mailto:nightdesert326@gmail.com">🔗 Email</Link><span className=" text-white float-right overflow-hidden">nightdesert326@gmail.com</span></p>
-        <p className="mt-12 mb-12 text-blue-400 block text-xl md:mt-4 md:mb-4 ">📞 Phone
+        {/* <p className="mt-12 mb-12 text-blue-400 block text-xl md:mt-4 md:mb-4 ">📞 Phone
         <span className="float-right text-white duration-300 opacity-1" onClick={() => handleClick()}>{isHidden ? "Click to reveal" : "+91 8604841869"}</span>
-        </p>
+        </p> */}
         
       </div>
 

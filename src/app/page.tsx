@@ -103,7 +103,7 @@ export default function Home() {
             </a>
           </div>
         </div> */}
-        <div className="grid text-center mb-12 lg:max-w-2xl lg:grid-cols-2 lg:text-left">
+        {/* <div className="grid text-center mb-12 lg:max-w-2xl lg:grid-cols-2 lg:text-left">
           <h2 className="mb-3 fixed z-10 text-white font-poppins content-center text-5xl"><Link href="/bg">0x0abd</Link></h2>
           <div className="logo-div h-48 w-48">
 
@@ -127,7 +127,7 @@ export default function Home() {
             </svg>
           </div>
 
-        </div>
+        </div> */}
       </main>
     </>
   );
