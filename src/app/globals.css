@@ -57,12 +57,16 @@ body {
   width: 12rem;
   position: absolute;
   clip-path: url(#splash-clip);
-  animation: anim-fadein 0.45s linear,anim-fadein 0.15s 1.6s reverse forwards;
+  animation: anim-fadein 0.45s linear;
+}
+
+.splash-logo-bg{
+  animation: anim-fadein 0.15s 1.6s reverse forwards;
 }
 
 .splash-bg-logo {
   transform-origin: 120px 120px;
-  animation: spin 10s linear infinite;
+  
 }
 
 @layer utilities {
