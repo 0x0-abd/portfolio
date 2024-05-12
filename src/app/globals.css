@@ -109,6 +109,10 @@ text {
   display: unset;
 }
 
+.intro-home {
+  animation: anim-fadein-slow 0.7s ease-in;
+}
+
 .canvas-wrap {
   animation: anim-fadein 0.3s 0.2s ease forwards;
 }
@@ -314,6 +318,16 @@ text {
 @keyframes anim-fadein {
   0% {
     opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes anim-fadein-slow {
+  0% {
+    opacity: 0.7;
   }
 
   100% {

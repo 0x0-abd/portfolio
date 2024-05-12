@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 let tabs = [
     { id: "", label: "Home" },
@@ -15,6 +15,10 @@ export default function AnimatedTabs() {
     let path = pathName.substring(1)
 
     let [activeTab, setActiveTab] = useState(isBg? tabs[0].id : path);
+
+    useEffect(() => {
+        setActiveTab(pathName.substring(1))
+    }, [pathName])
     
     return (
         <>
@@ -24,7 +28,7 @@ export default function AnimatedTabs() {
                         <Link key={tab.id} href={`/${tab.id}`}>
                             <button
                                 
-                                onClick={() => setActiveTab(tab.id)}
+                                // onClick={() => setActiveTab(tab.id)}
                                 className={`${activeTab === tab.id ? " bg-sky-500 bg-opacity-25" : "hover:opacity-50"} duration-300 text-xl rounded-full px-3 py-1.5 font-medium text-white outline-2 outline-sky-400 focus-visible:outline lg:text-2xl lg:px-5`}
                             >
                                 {tab.label}

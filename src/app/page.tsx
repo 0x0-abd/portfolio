@@ -7,7 +7,7 @@ export default function Home() {
       <Link className="intro-nav-logo fixed block origin-center cursor-pointer" href="/bg">
 
       </Link>
-      <div id="intro">
+      <div id="intro" className='intro-home'>
         <svg xmlns="http://www.w3.org/2000/svg" className="fixed z-10 top-0 left-0 bottom-0 right-0 fill-none pointer-events-none h-full w-full" baseProfile="full" version="1.1">
           <defs>
             <clipPath id="clip-logo">
@@ -31,7 +31,7 @@ export default function Home() {
                 <rect className="mask-main-bg w-screen h-screen fill-white"></rect>
               </g>
               <g className="intro-wrap intro-fadeout">
-                <g className="introicon-wrap1">
+                <g className="introicon-wrap1 ">
                   <g className="introicon-wrap2">
                     <g className="introicon-bg">
                       <g className="introicon-sub1">
@@ -47,21 +47,7 @@ export default function Home() {
                   <g className="intropart introtexts">
                     <text className="header">Abhyuday Shukla</text>
                     {/* <text className="header">Abhyuday Shukla</text> */}
-                    <text className="subheader">Creative Full-Stack Developer & Designer</text>
-                    {/* <g className="links">
-                              <text className="link link-about">
-                                <tspan>a</tspan><tspan>b</tspan><tspan>o</tspan><tspan>u</tspan><tspan>t</tspan>
-                              </text>
-                              <text className="link link-current">
-                                <tspan>c</tspan><tspan>u</tspan><tspan>r</tspan><tspan>r</tspan><tspan>e</tspan><tspan>n</tspan><tspan>t</tspan>
-                              </text>
-                              <text className="link link-past">
-                                <tspan>p</tspan><tspan>a</tspan><tspan>s</tspan><tspan>t</tspan>
-                              </text>
-                              <text className="link link-more">
-                                <tspan>m</tspan><tspan>o</tspan><tspan>r</tspan><tspan>e</tspan>
-                              </text>
-                            </g> */}
+                    <text className="subheader">Creative Full-Stack Developer & Designer </text>
                   </g>
                 </g>
 
