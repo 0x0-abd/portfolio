@@ -198,6 +198,11 @@ text {
   /* transform: translate(-10.62 -50.41) !important; */
 }
 
+#path-logo-2 {
+  animation: spin2 36s linear infinite;
+  /* transform: translate(-10.62 -50.41) !important; */
+}
+
 .introicon-sub1 {
   transform-origin: 100px 100px
 }
@@ -211,6 +216,7 @@ text {
   fill: #11161a;
   opacity: 0.85;
   transition: opacity 0.2s 0.0s ease-in-out;
+  animation: fadeOpacity 6s ease-in-out infinite;
   width: 100%;
   height: 100%;
   mask-image: url(#mask-main-dark-inner);
@@ -222,6 +228,16 @@ text {
   mask-clip: border-box;
   mask-composite: add;
   mask-mode: match-source;
+  will-change: opacity, transform, mask-image;
+}
+
+@keyframes fadeOpacity {
+  0%, 100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .cls-1{

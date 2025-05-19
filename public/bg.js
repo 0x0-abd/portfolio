@@ -40,8 +40,8 @@ var bgcanvas = document.querySelector('canvas');
 bgcanvas.width = bgcanvas.height = 640;
 // var gui = new dat.GUI({name: 'Configure Background'})
 // 🟦 Shaders
-var vertWgsl = "\nstruct VSOut {\n    @builtin(position) Position: vec4<f32>,\n    @location(0) color: vec3<f32>,\n};\n\n@vertex\nfn main(@location(0) inPos: vec3<f32>,\n        @location(1) inColor: vec3<f32>) -> VSOut {\n    var vsOut: VSOut;\n    vsOut.Position = vec4<f32>(inPos, 1.0);\n    vsOut.color = vec3<f32>(inPos.x+1, inPos.y+1, 1);\n    return vsOut;\n}";
-var fragWgsl = "\n\nstruct Uniforms {\n    colorChangeMatrix: vec3<f32>,\n}\n\n@binding(0) @group(0) var<uniform> uniforms: Uniforms;\n\nfn getRed(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.75 + 0.25*cos(((pos.x*pos.x)-(pos.y*pos.y)) + uniforms.colorChangeMatrix.x * 20));\n    return ans;\n}\n\nfn getGreen(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.75 + 0.25*sin((pos.x*pos.x*cos(uniforms.colorChangeMatrix.x * 20/4)) + (pos.y*pos.y*sin(uniforms.colorChangeMatrix.x*20/2))));\n    return ans;\n}\n\nfn getBlue(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.75 + 0.25*sin((5*sin(uniforms.colorChangeMatrix.x*20/9))+ ((pos.x*pos.x)+(pos.y*pos.y))/1));\n    return ans;\n}\n\n@fragment\nfn main(@location(0) inColor: vec3<f32>) -> @location(0) vec4<f32> {\n\n    return vec4<f32>(getRed(inColor), getGreen(inColor), getBlue(inColor), 1.0);\n}";
+var vertWgsl = "\nstruct VSOut {\n    @builtin(position) Position: vec4<f32>,\n    @location(0) color: vec3<f32>,\n    @location(1) uv: vec2<f32>\n};\n\n@vertex\nfn main(@location(0) inPos: vec3<f32>,\n        @location(1) inColor: vec3<f32>) -> VSOut {\n    var vsOut: VSOut;\n    vsOut.Position = vec4<f32>(inPos, 1.0);\n    vsOut.uv = (inPos.xy * 0.5) + vec2<f32>(0.5, 0.5);\n    vsOut.color = vec3<f32>(inPos.x+1, inPos.y+1, 1);\n    return vsOut;\n}";
+var fragWgsl = "\n\nstruct Uniforms {\n    colorChangeMatrix: vec3<f32>,\n    time: f32,\n}\n\n@binding(0) @group(0) var<uniform> uniforms: Uniforms;\n@group(0) @binding(2) var<uniform> mousePos : vec4<f32>;\n\nfn getRed(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.70 + 0.30*cos(((pos.x*pos.x)-(pos.y*pos.y)) + uniforms.colorChangeMatrix.x * 20));\n    return ans;\n}\n\nfn getGreen(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.70 + 0.30*sin((pos.x*pos.x*cos(uniforms.colorChangeMatrix.x * 20/4)) + (pos.y*pos.y*sin(uniforms.colorChangeMatrix.x*20/2))));\n    return ans;\n}\n\nfn getBlue(pos: vec3<f32>) -> f32 {\n    let ans = f32(0.70 + 0.30*sin((5*sin(uniforms.colorChangeMatrix.x*20/9))+ ((pos.x*pos.x)+(pos.y*pos.y))/1));\n    return ans;\n}\n\nfn animatedDither(pos: vec2<f32>, time: f32) -> f32 {\n    return fract(sin(dot(pos.xy + time ,vec2<f32>(12.9898,78.233))) * 43758.5453);\n}\n\nfn getMouseDist(uv: vec2<f32>) -> f32 {\n    let dx = (uv.x-mousePos.x)*mousePos.z;\n    let dy = (uv.y-mousePos.y);\n    return sqrt(dx*dx + dy*dy);\n}\n\n@fragment\nfn main(@location(0) inColor: vec3<f32>,\n        @location(1) uv: vec2<f32>) -> @location(0) vec4<f32> {\n\n    let baseColor = vec3<f32>(\n        getRed(inColor),\n        getGreen(inColor),\n        getBlue(inColor)\n    );\n    let dist = getMouseDist(uv);\n    let pulses = array<vec4<f32>, 3>(\n        vec4<f32>(0.0,  2.0, 8.0, 3.0),\n        vec4<f32>(0.3,  2.5, 4.0, 4.0),\n        vec4<f32>(0.6,  3.0,  3.0, 5.0)\n    );\n    var wave: f32 = 0.0;\n    let wavenoise = sin(uv.x * 50.0 + uniforms.time * 2.0) * sin(uv.y * 50.0 + uniforms.time * 1.5);\n    let deform = 1.0 + 0.15 * wavenoise;\n    let distortedDist = dist * deform;\n    for (var i = 0u; i < 3u; i = i + 1u) {\n        let p = pulses[i];\n        // t_p = normalized time since this pulse \u201Cfired\u201D\n        let t_p = uniforms.time * p.y - p.x;\n        // only contribute when t_p > d (wavefront has passed)\n        if (t_p > distortedDist) {\n            let phase = (distortedDist * p.z) - (uniforms.time * p.y);\n            let envelope = exp(-distortedDist * p.w);\n            wave = wave + sin(phase) * envelope;\n        }\n    }\n    let noise = animatedDither(inColor.xy, uniforms.time) * 0.05; // small noise\n\n    let finalColor = mix(baseColor, vec3<f32>(0.3, 0.6, 0.9) * wave, 0.1) + noise;\n    return vec4<f32>(finalColor, 1.0);\n}";
 var positions = new Float32Array([
     1.0, 1.0, 0.0,
     -1.0, 1.0, 0.0,
@@ -88,8 +88,17 @@ var Renderer = /** @class */ (function () {
         document.addEventListener("mousemove", function (e) {
             if (!_this.canvas)
                 return;
-            mouse[0] = e.clientX / _this.canvas.clientWidth;
-            mouse[1] = 1.0 - e.clientY / _this.canvas.clientHeight;
+            var rect = _this.canvas.getBoundingClientRect();
+            mouse[0] = (e.clientX - rect.left) / rect.width;
+            mouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
+            // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
+        });
+        document.addEventListener("touchmove", function (e) {
+            if (!_this.canvas)
+                return;
+            var rect = _this.canvas.getBoundingClientRect();
+            mouse[0] = (e.touches[0].clientX - rect.left) / rect.width;
+            mouse[1] = 1.0 - (e.touches[0].clientY - rect.top) / rect.height;
             // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
         });
         this.render = this.render.bind(this);
@@ -157,7 +166,7 @@ var Renderer = /** @class */ (function () {
     };
     Renderer.prototype.initialiseResources = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var createBuffer, uniformBufferSize, heightWidthUniformBufferSize, vsmDesc, fsmDesc, positionAttributeDesc, colorAttributeDesc, positionBufferDesc, colorBufferDesc, depthStencil, bindGroupLayout, pipelineLayoutDesc, layout, vertex, colorState, fragment, primitive, pipelineDesc;
+            var createBuffer, uniformBufferSize, mouseMovementBufferSize, heightWidthUniformBufferSize, vsmDesc, fsmDesc, positionAttributeDesc, colorAttributeDesc, positionBufferDesc, colorBufferDesc, depthStencil, bindGroupLayout, pipelineLayoutDesc, layout, vertex, colorState, fragment, primitive, pipelineDesc;
             var _this = this;
             return __generator(this, function (_a) {
                 createBuffer = function (arr, usage) {
@@ -175,6 +184,11 @@ var Renderer = /** @class */ (function () {
                 uniformBufferSize = 4 * 4;
                 this.uniformBuffer = this.device.createBuffer({
                     size: uniformBufferSize,
+                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                });
+                mouseMovementBufferSize = 4 * 4;
+                this.mouseMovementBuffer = this.device.createBuffer({
+                    size: mouseMovementBufferSize,
                     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
                 });
                 heightWidthUniformBufferSize = 2 * 4;
@@ -227,6 +241,10 @@ var Renderer = /** @class */ (function () {
                             binding: 1,
                             visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
                             buffer: {}
+                        }, {
+                            binding: 2,
+                            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+                            buffer: {}
                         }]
                 });
                 pipelineLayoutDesc = { bindGroupLayouts: [bindGroupLayout] };
@@ -237,7 +255,7 @@ var Renderer = /** @class */ (function () {
                     buffers: [positionBufferDesc, colorBufferDesc]
                 };
                 colorState = {
-                    format: 'bgra8unorm',
+                    format: 'rgba16float',
                     writeMask: GPUColorWrite.ALL
                 };
                 fragment = {
@@ -275,7 +293,7 @@ var Renderer = /** @class */ (function () {
             var canvasConfig = {
                 device: this.device,
                 alphaMode: "opaque",
-                format: 'bgra8unorm',
+                format: 'rgba16float',
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
             };
             (_a = this.context) === null || _a === void 0 ? void 0 : _a.configure(canvasConfig);
@@ -319,6 +337,12 @@ var Renderer = /** @class */ (function () {
                     resource: {
                         buffer: this.heightWidthUniformBuffer,
                     }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.mouseMovementBuffer,
+                    }
                 }
             ]
         });
@@ -327,7 +351,9 @@ var Renderer = /** @class */ (function () {
             depthStencilAttachment: depthAttachment
         };
         var colorChangeMatrix = this.getColorChangeMatrix();
+        var mouseMovementData = this.updateMouseUniform();
         this.queue.writeBuffer(this.uniformBuffer, 0, colorChangeMatrix.buffer, colorChangeMatrix.byteOffset, colorChangeMatrix.byteLength);
+        this.queue.writeBuffer(this.mouseMovementBuffer, 0, mouseMovementData.buffer, mouseMovementData.byteOffset, mouseMovementData.byteLength);
         // console.log(colorChangeMatrix);
         var heightWidthMatrix = new Float32Array([(this.canvas.clientHeight), (this.canvas.clientWidth)]);
         this.queue.writeBuffer(this.heightWidthUniformBuffer, 0, heightWidthMatrix.buffer, heightWidthMatrix.byteOffset, heightWidthMatrix.byteLength);
@@ -346,10 +372,31 @@ var Renderer = /** @class */ (function () {
         this.passEncoder.end();
         this.queue.submit([this.commandEncoder.finish()]);
     };
+    Renderer.prototype.updateMouseUniform = function () {
+        var width = this.canvas.clientWidth;
+        var height = this.canvas.clientHeight;
+        var vwidth;
+        var vheight;
+        var aspect = width / height;
+        if (aspect < 1.0) {
+            vwidth = aspect;
+            vheight = 1.0;
+        }
+        else {
+            vwidth = 1.0;
+            vheight = 1.0 / aspect;
+        }
+        return new Float32Array([
+            this.mouse[0],
+            this.mouse[1],
+            aspect,
+            0
+        ]);
+    };
     Renderer.prototype.getColorChangeMatrix = function () {
         // console.log('omg')
-        var now = Date.now();
-        return new Float32Array([Math.sin(now / 5000), Math.sin(2 * Math.PI / 3 + now / 300), Math.sin(4 * Math.PI / 3 + now / 600), 1]);
+        var now = performance.now();
+        return new Float32Array([Math.sin(now / 5000), Math.sin(2 * Math.PI / 3 + now / 300), Math.sin(4 * Math.PI / 3 + now / 600), now / 1000]);
     };
     return Renderer;
 }());
