@@ -1,6 +1,6 @@
 "use client"
 import type { Metadata } from "next";
-import { Inter, Poppins, Quicksand } from "next/font/google";
+import { Figtree, Inter, Poppins, Quicksand } from "next/font/google";
 import Script from "next/script";
 import SplashScreen from "./SplashScreen";
 import "./globals.css";
@@ -20,6 +20,12 @@ const quicksand = Quicksand({
   variable: '--font-quicksand',
 })
 
+const figtree = Figtree({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-figtree',
+});
+
 
 
 
@@ -36,6 +42,7 @@ export default function RootLayout({
 
   const pathName = usePathname()
   const isHome = pathName === "/"
+  const [showTabs, setShowTabs] = useState(true)
   const [isLoading, setIsLoading] = useState(isHome)
 
   // useEffect(() => {
@@ -53,7 +60,7 @@ export default function RootLayout({
         />
       </head>
       <title>Abhyuday Shukla</title>
-      <body className={`${inter.className} ${poppins.variable} ${quicksand.variable}`}>
+      <body className={`${inter.className} ${poppins.variable} ${quicksand.variable} ${figtree.variable}`}>
 
         {isLoading && isHome ? (
           <SplashScreen finishLoading={() => setIsLoading(false)} />
@@ -61,7 +68,7 @@ export default function RootLayout({
           <>
 
             <div className="realbody relative h-full w-full">
-              <AnimatedTabs />
+              { showTabs && <AnimatedTabs />}
               <div className="canvas-wrap z-0 fixed top-0 left-0 h-full w-full opacity-0">
                 <canvas />
               </div>

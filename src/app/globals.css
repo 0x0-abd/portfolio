@@ -231,12 +231,40 @@ text {
   will-change: opacity, transform, mask-image;
 }
 
+.intro-masked-dark {
+  fill: #11161a;
+  opacity: 0.85;
+  transition: opacity 0.2s 0.0s ease-in-out;
+  animation: fadeOpacity 10s ease-in-out infinite;
+  width: 100%;
+  height: 100%;
+  mask-image: url(#mask-main-dark-inner);
+  -webkit-mask-position-x: 0%;
+  -webkit-mask-position-y: 0%;
+  mask-size: auto;
+  mask-repeat: repeat;
+  mask-origin: border-box;
+  mask-clip: border-box;
+  mask-composite: add;
+  mask-mode: match-source;
+  will-change: opacity, transform, mask-image;
+}
+
 @keyframes fadeOpacity {
   0%, 100% {
     opacity: 0.75;
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes fadeOpacity {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.65;
   }
 }
 
@@ -290,7 +318,7 @@ text {
 
 .logo-p1 {
   stroke-dasharray: 536.689453125;
-  animation: draw 1.2s cubic-bezier(.33,.36,.84,.51), anim-fadein 0.15s 1.6s linear reverse forwards;
+  animation: draw 1.2s cubic-bezier(.33,.36,.84,.51) forwards, anim-fadein 0.15s 1.6s linear reverse forwards;
   fill: none;
 }
 
@@ -299,14 +327,34 @@ text {
     stroke-dashoffset: 536.689453125;
     fill-opacity: 0.9;
   }
+  50% {
+    stroke-dashoffset: 470;
+    fill-opacity: 1;
+  }
   /* 10% {
     stroke-dashoffset: 536.689453125;
      fill-opacity: 0.9; 
   } */
   100% {
-    stroke-dashoffset: 400;
+    stroke-dashoffset: 100;
     fill-opacity: 1;
   }
+}
+
+.line-before {
+  position: relative;
+}
+
+.line-before::before {
+  content: "";
+  position: absolute;
+  top: -10px; /* adjust spacing above */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 2px;
+  opacity: 0.2;
+  background-color: white;
 }
 
 .logo-ps {
