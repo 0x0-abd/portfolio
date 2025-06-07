@@ -15,6 +15,7 @@ const config: Config = {
       fontFamily: {
         poppins: ['var(--font-poppins)'],
         quicksand: ['var(--font-quicksand)'],
+        figtree: ['var(--font-figtree)'],
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

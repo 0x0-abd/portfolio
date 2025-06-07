@@ -6,7 +6,7 @@ let tabs = [
     { id: "", label: "Home" },
     { id: "about", label: "About" },
     { id: "projects", label: "Projects" },
-    { id: "links", label: "Links" },
+    // { id: "links", label: "Links" },
 ];
 
 export default function AnimatedTabs() {

@@ -85,22 +85,16 @@ var Renderer = /** @class */ (function () {
         this.canvas = canvas;
         this.startTime = 0;
         var mouse = this.mouse = [0.5, 0.5];
-        document.addEventListener("mousemove", function (e) {
-            if (!_this.canvas)
-                return;
-            var rect = _this.canvas.getBoundingClientRect();
-            mouse[0] = (e.clientX - rect.left) / rect.width;
-            mouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
-            // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
-        });
-        document.addEventListener("touchmove", function (e) {
-            if (!_this.canvas)
-                return;
-            var rect = _this.canvas.getBoundingClientRect();
-            mouse[0] = (e.touches[0].clientX - rect.left) / rect.width;
-            mouse[1] = 1.0 - (e.touches[0].clientY - rect.top) / rect.height;
-            // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
-        });
+        if (window.matchMedia("(min-width: 768px)").matches) {
+            document.addEventListener("mousemove", function (e) {
+                if (!_this.canvas)
+                    return;
+                var rect = _this.canvas.getBoundingClientRect();
+                mouse[0] = (e.clientX - rect.left) / rect.width;
+                mouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
+                // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
+            });
+        }
         this.render = this.render.bind(this);
     }
     Renderer.prototype.start = function () {
@@ -255,7 +249,7 @@ var Renderer = /** @class */ (function () {
                     buffers: [positionBufferDesc, colorBufferDesc]
                 };
                 colorState = {
-                    format: 'rgba16float',
+                    format: 'bgra8unorm',
                     writeMask: GPUColorWrite.ALL
                 };
                 fragment = {
@@ -293,7 +287,7 @@ var Renderer = /** @class */ (function () {
             var canvasConfig = {
                 device: this.device,
                 alphaMode: "opaque",
-                format: 'rgba16float',
+                format: 'bgra8unorm',
                 usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
             };
             (_a = this.context) === null || _a === void 0 ? void 0 : _a.configure(canvasConfig);
