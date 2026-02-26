@@ -55,7 +55,7 @@ function About() {
           <div>
             <h2 className="font-semibold text-2xl pb-2 pt-8 drop-shadow-[0_0_8px_rgba(59,130,246,0.7)]">About Me</h2>
             <p>
-              Hey there!👋 I'm Abhyuday, a software developer working on various Web technologies and Cloud.
+              Hey there!👋 I&apos;m Abhyuday, a software developer working on various Web technologies and Cloud.
               I enjoy solving complex problems and analysing different systems. You can find me drinking chaii and listening to music often 🍵~
             </p>
             <div className="grid grid-cols-4 gap-4 p-4 place-items-center">
