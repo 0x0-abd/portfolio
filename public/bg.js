@@ -46,7 +46,7 @@ var positions = new Float32Array([
     1.0, 1.0, 0.0,
     -1.0, 1.0, 0.0,
     1.0, -1.0, 0.0,
-    -1.0, -1, 0, 0.0
+    -1.0, -1.0, 0.0
 ]);
 var colors = new Float32Array([
     1.0, 0.0, 0.0, // 🔴
@@ -74,10 +74,9 @@ var Renderer = /** @class */ (function () {
             //  ^?
             if (resized) {
                 _this.resizeBackings();
-                _this.render();
             }
             // Write and encode commands
-            _this.encodeCommands();
+            _this.encodeCommands(now);
             // console.log(window.performance.now())
             // Refreshing canvas
             requestAnimationFrame(_this.render);
@@ -270,6 +269,24 @@ var Renderer = /** @class */ (function () {
                     depthStencil: depthStencil
                 };
                 this.pipeline = this.device.createRenderPipeline(pipelineDesc);
+                // Create bind group once here so encodeCommands can reuse it every frame
+                this.uniformBindGroup = this.device.createBindGroup({
+                    layout: this.pipeline.getBindGroupLayout(0),
+                    entries: [
+                        {
+                            binding: 0,
+                            resource: { buffer: this.uniformBuffer },
+                        },
+                        {
+                            binding: 1,
+                            resource: { buffer: this.heightWidthUniformBuffer },
+                        },
+                        {
+                            binding: 2,
+                            resource: { buffer: this.mouseMovementBuffer },
+                        },
+                    ]
+                });
                 return [2 /*return*/];
             });
         });
@@ -301,7 +318,7 @@ var Renderer = /** @class */ (function () {
         this.depthTexture = this.device.createTexture(depthTextureDesc);
         this.depthTextureView = this.depthTexture.createView();
     };
-    Renderer.prototype.encodeCommands = function () {
+    Renderer.prototype.encodeCommands = function (now) {
         var colorAttachment = {
             view: this.colorTextureView,
             clearValue: { r: 0, g: 0, b: 0, a: 1 },
@@ -317,34 +334,11 @@ var Renderer = /** @class */ (function () {
             stencilLoadOp: 'clear',
             stencilStoreOp: 'store'
         };
-        var uniformBindGroup = this.device.createBindGroup({
-            layout: this.pipeline.getBindGroupLayout(0),
-            entries: [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.uniformBuffer,
-                    },
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: this.heightWidthUniformBuffer,
-                    }
-                },
-                {
-                    binding: 2,
-                    resource: {
-                        buffer: this.mouseMovementBuffer,
-                    }
-                }
-            ]
-        });
         var renderPassDesc = {
             colorAttachments: [colorAttachment],
             depthStencilAttachment: depthAttachment
         };
-        var colorChangeMatrix = this.getColorChangeMatrix();
+        var colorChangeMatrix = this.getColorChangeMatrix(now);
         var mouseMovementData = this.updateMouseUniform();
         this.queue.writeBuffer(this.uniformBuffer, 0, colorChangeMatrix.buffer, colorChangeMatrix.byteOffset, colorChangeMatrix.byteLength);
         this.queue.writeBuffer(this.mouseMovementBuffer, 0, mouseMovementData.buffer, mouseMovementData.byteOffset, mouseMovementData.byteLength);
@@ -356,7 +350,7 @@ var Renderer = /** @class */ (function () {
         // Encoding draw commands
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         this.passEncoder.setPipeline(this.pipeline);
-        this.passEncoder.setBindGroup(0, uniformBindGroup);
+        this.passEncoder.setBindGroup(0, this.uniformBindGroup);
         this.passEncoder.setViewport(0, 0, this.canvas.width, this.canvas.height, 0, 1);
         this.passEncoder.setScissorRect(0, 0, this.canvas.width, this.canvas.height);
         this.passEncoder.setVertexBuffer(0, this.positionBuffer);
@@ -387,9 +381,8 @@ var Renderer = /** @class */ (function () {
             0
         ]);
     };
-    Renderer.prototype.getColorChangeMatrix = function () {
+    Renderer.prototype.getColorChangeMatrix = function (now) {
         // console.log('omg')
-        var now = performance.now();
         return new Float32Array([Math.sin(now / 5000), Math.sin(2 * Math.PI / 3 + now / 300), Math.sin(4 * Math.PI / 3 + now / 600), now / 1000]);
     };
     return Renderer;
