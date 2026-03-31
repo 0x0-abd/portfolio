@@ -55,39 +55,51 @@ var colors = new Float32Array([
     0.5, 1.0, 0.0
 ]);
 var indices = new Uint16Array([0, 1, 2, 3]);
+var isInteracting = false;
 var Renderer = /** @class */ (function () {
     function Renderer(canvas) {
         var _this = this;
+        this.lastFrame = 0;
+        this.FPS = 24;
+        this.interval = 1000 / this.FPS;
         this.render = function () {
-            var now = window.performance.now();
+            var now = performance.now();
+            if (now - _this.lastFrame < _this.interval) {
+                requestAnimationFrame(_this.render);
+                return;
+            }
+            _this.lastFrame = now;
             if (!_this.startTime)
                 _this.startTime = now;
-            now -= _this.startTime;
-            // Acquire next image from context
-            if (_this.context !== null)
-                _this.colorTexture = _this.context.getCurrentTexture();
-            _this.colorTextureView = _this.colorTexture.createView();
+            var time = now - _this.startTime;
             var cheight = _this.canvas.clientHeight;
             var cwidth = _this.canvas.clientWidth;
-            // console.log(height, width)
-            var resized = _this.canvas.width != cwidth || _this.canvas.height != cheight;
-            //  ^?
-            if (resized) {
+            if (_this.canvas.width !== cwidth ||
+                _this.canvas.height !== cheight) {
                 _this.resizeBackings();
             }
-            // Write and encode commands
-            _this.encodeCommands(now);
-            // console.log(window.performance.now())
-            // Refreshing canvas
+            if (_this.context)
+                _this.colorTexture = _this.context.getCurrentTexture();
+            _this.colorTextureView = _this.colorTexture.createView();
+            _this.encodeCommands(time);
             requestAnimationFrame(_this.render);
         };
         this.canvas = canvas;
         this.startTime = 0;
+        window.addEventListener("click", function () {
+            isInteracting = true;
+            setTimeout(function () { return isInteracting = false; }, 200);
+        });
         var mouse = this.mouse = [0.5, 0.5];
+        var lastUpdate = 0;
         if (window.matchMedia("(min-width: 768px)").matches) {
             document.addEventListener("mousemove", function (e) {
                 if (!_this.canvas)
                     return;
+                var now = performance.now();
+                if (now - lastUpdate < 50)
+                    return;
+                lastUpdate = now;
                 var rect = _this.canvas.getBoundingClientRect();
                 mouse[0] = (e.clientX - rect.left) / rect.width;
                 mouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
@@ -294,11 +306,13 @@ var Renderer = /** @class */ (function () {
     // Resizing canvas, frame buffer attachments
     Renderer.prototype.resizeBackings = function () {
         var _a;
+        var DPR = Math.min(window.devicePixelRatio, 1.2);
+        var SCALE = window.innerWidth > 768 ? 0.6 : 0.8;
         // Canvas Context!
         var cheight = this.canvas.clientHeight;
         var cwidth = this.canvas.clientWidth;
-        this.canvas.width = cwidth;
-        this.canvas.height = cheight;
+        this.canvas.width = cwidth * SCALE;
+        this.canvas.height = cheight * SCALE;
         if (!this.context) {
             this.context = this.canvas.getContext('webgpu');
             var canvasConfig = {
