@@ -107,8 +107,11 @@ export default function About() {
                       
                       <ul className="list-disc pl-5 space-y-2 text-base md:text-lg text-slate-300 leading-relaxed">
                         <li>Contribute to <b>agile development lifecycles</b>, driving system architecture discussions and conducting rigorous code reviews.</li>
+                        <li>Develop scalable management systems and data processing pipelines with <b>React</b>, <b>Spring Boot</b>, and <b>Spring Batch</b>.</li>
                         <li>Architect and provision highly scalable cloud backends utilizing <b>AWS CDK</b> (Infrastructure as Code).</li>
+                        <li>Build and scale event-driven architectures using <b>AWS services</b> such as ECS, EC2, RDS, S3, Lambda, ElastiCache, DynamoDB, EventBridge Pipes, and Kinesis.</li>
                         <li>Implement and streamline <b>CI/CD pipelines</b> to ensure reliable, automated testing and deployment workflows.</li>
+                        <li>Lead and support interns and new team members through task planning, knowledge sharing, and technical mentorship.</li>
                       </ul>
                     </div>
 
