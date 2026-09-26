@@ -1,4 +1,3 @@
-import { transform } from "next/dist/build/swc";
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -13,8 +12,6 @@ const config: Config = {
         'background': '#141a1e',
       },
       fontFamily: {
-        poppins: ['var(--font-poppins)'],
-        quicksand: ['var(--font-quicksand)'],
         figtree: ['var(--font-figtree)'],
       },
       backgroundImage: {

@@ -1,11 +1,10 @@
-"use client"
-
-import React from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+import IntroMask from '../components/IntroMask'
 
 const projects = [
   {
@@ -16,7 +15,7 @@ const projects = [
     stack: ["React", "Firebase", "Node.js", "MongoDB", "Cloudinary", "Tailwind"],
     github: "https://github.com/0x0-abd/yearbook",
     live: "https://digitalyearbook.vercel.app",
-    image: "/yearbook.png",
+    image: "/yearbook.webp",
     accent: "cyan",
     accentClass: "text-cyan-400",
     borderClass: "border-cyan-500",
@@ -31,7 +30,7 @@ const projects = [
     stack: ["React", "TMDB API", "Flask", "Tailwind"],
     github: "https://github.com/0x0-abd/movie-explorer",
     live: "https://movie-explorer-weld.vercel.app",
-    image: "/movie-explorer.png",
+    image: "/movie-explorer.webp",
     
     accent: "violet",
     accentClass: "text-violet-400",
@@ -47,7 +46,7 @@ const projects = [
     stack: ["React", "Bootstrap", "Node.js", "MongoDB"],
     github: "https://github.com/0x0-abd/ISDL",
     live: "https://grocery-store-kohl.vercel.app/browse",
-    image: "/gfc.png",
+    image: "/gfc.webp",
     accent: "emerald",
     accentClass: "text-emerald-400",
     borderClass: "border-emerald-500",
@@ -62,7 +61,7 @@ const projects = [
     stack: ["Python", "Scikit-learn", "NumPy", "Rough Sets"],
     github: "https://github.com/0x0-abd/Hyperspectral-Image-Analysis",
     live: null,
-    image: "/hsi.png",
+    image: "/hsi.webp",
     accent: "rose",
     accentClass: "text-rose-400",
     borderClass: "border-rose-500",
@@ -77,7 +76,7 @@ const projects = [
     stack: ["Next.js", "Socket.io", "Node.js", "Tailwind"],
     github: "https://github.com/0x0-abd/uc-frontend",
     live: null,
-    image: "/chatroom.png",
+    image: "/chatroom.webp",
     accent: "blue",
     accentClass: "text-blue-400",
     borderClass: "border-blue-500",
@@ -86,34 +85,12 @@ const projects = [
   },
 ]
 
+export const metadata: Metadata = { title: 'Projects' }
+
 export default function Projects() {
   return (
     <>
-      <title>Abhyuday Shukla | Projects</title>
-
-      {/* Background Mask — same as About page */}
-      <div id="intro">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="fixed z-10 top-0 left-0 bottom-0 right-0 fill-none pointer-events-none h-full w-full"
-          baseProfile="full"
-          version="1.1"
-        >
-          <defs>
-            <mask id="mask-main-dark-inner" className="force-dark">
-              <rect className="fill-black w-screen h-screen"></rect>
-              <g className="intro-fadeout">
-                <rect className="mask-main-bg w-screen h-screen fill-white"></rect>
-              </g>
-              <g className="intro-wrap intro-fadeout"></g>
-            </mask>
-          </defs>
-          <g className="intro-masked-wrap">
-            <rect className="intro-masked lght" width="100%" height="100%" mask="url(#mask-main-lght)"></rect>
-            <rect className="intro-masked dark" width="100%" height="100%" mask="url(#mask-main-dark-inner)"></rect>
-          </g>
-        </svg>
-      </div>
+      <IntroMask />
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-start py-20 px-6 lg:px-12">
         <div className="w-full max-w-7xl font-figtree text-white">
@@ -136,6 +113,7 @@ export default function Projects() {
                       src={project.image}
                       alt={project.title}
                       fill
+                      sizes="(min-width: 1024px) 50vw, 100vw"
                       className="object-cover object-top opacity-70 group-hover:opacity-90 transition-all duration-500 group-hover:scale-105"
                     />
                   ) : (
