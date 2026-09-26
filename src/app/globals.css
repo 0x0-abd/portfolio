@@ -1,3 +1,6 @@
+/* Before Tailwind so utility classes (h-7, w-5...) can size the icons. */
+@import "@fortawesome/fontawesome-svg-core/styles.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,10 +11,6 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-/* :not(svg) {
-  transform-origin: 0px 0px;
-} */
-
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -20,20 +19,9 @@
   }
 }
 
-/* body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  will-change: opacity;
-} */
 body {
   color: rgb(var(--foreground-rgb));
   background: transparent;
-  /* will-change: opacity; */
 }
 
 .realbody {
@@ -44,12 +32,6 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
-  /* mask-mode: ; */
-   /* mask: url(#mask-main-dark-inner); */
-  /*-webkit-mask: url(#m1), url(#m2);
-          mask: url(#m1), url(#m2);
-  -webkit-mask-composite: exclude;
-          mask-composite: exclude; */
 }
 
 .splash-bg-img{
@@ -66,34 +48,20 @@ body {
 
 .splash-bg-logo {
   transform-origin: 120px 120px;
-  
-}
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
 }
-
-/*.poppins {
-  font-family: var(--font-poppins);
-}
-
-.quicksand {
-  font-family: var(--font-quicksand);
-}*/
 
 html, body {
-  margin: 0;       
-  height: 100%;    
+  margin: 0;
+  height: 100%;
 }
-canvas {  
+canvas {
   position: absolute;
   top: -4px;
   left: -4px;
-  width: calc(100% + 4px);     
-  height: calc(100% + 4px); 
-  
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+
   transition: opacity 0.2s, border-top-color 0.2s 0.1s ease-in-out, border-right-color 1s ease-out;
   border-color: black;
   border-top-color: #fff;
@@ -117,6 +85,20 @@ text {
   animation: anim-fadein 0.3s 0.2s ease forwards;
 }
 
+/* Still of the shader; shows while WebGPU starts up and in browsers without it. */
+.bg-fallback {
+  background: url(/bg.webp) center / cover no-repeat;
+}
+
+/* Set by the inline script in layout.tsx before hydration. */
+html[data-skip-splash] .splash-screen {
+  display: none;
+}
+
+html[data-skip-splash] .app-content {
+  display: block;
+}
+
 .intro-wrap{
   transition: transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.2s ease;
   transform-origin: 50vw 50vh;
@@ -128,12 +110,9 @@ text {
   transform-origin: 125px 125px;
 }
 
-
-
 .introicon-wrap2{
   transform-origin: 125px 125px;
 }
-
 
 .intropart-wrap{
   transition: transform 0.15s ease, filter 0.15s ease;
@@ -189,18 +168,14 @@ text {
   transition: color 0.2s ease-in-out, stroke 0.2s ease-in-out;
 }
 
-/* .logo-rotation-origin {
-  transform-origin: 99.545px 97.845px;
-} */
-
 #path-logo {
   animation: spin2 12s linear infinite;
-  /* transform: translate(-10.62 -50.41) !important; */
+
 }
 
 #path-logo-2 {
   animation: spin2 36s linear infinite;
-  /* transform: translate(-10.62 -50.41) !important; */
+
 }
 
 .introicon-sub1 {
@@ -231,34 +206,6 @@ text {
   will-change: opacity, transform, mask-image;
 }
 
-.intro-masked-dark {
-  fill: #11161a;
-  opacity: 0.85;
-  transition: opacity 0.2s 0.0s ease-in-out;
-  animation: fadeOpacity 10s ease-in-out infinite;
-  width: 100%;
-  height: 100%;
-  mask-image: url(#mask-main-dark-inner);
-  -webkit-mask-position-x: 0%;
-  -webkit-mask-position-y: 0%;
-  mask-size: auto;
-  mask-repeat: repeat;
-  mask-origin: border-box;
-  mask-clip: border-box;
-  mask-composite: add;
-  mask-mode: match-source;
-  will-change: opacity, transform, mask-image;
-}
-
-@keyframes fadeOpacity {
-  0%, 100% {
-    opacity: 0.75;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 @keyframes fadeOpacity {
   0%, 100% {
     opacity: 0.85;
@@ -285,12 +232,12 @@ text {
 .logo {
   position: relative;
   transition: transform 300ms ease-in-out;
-  /* animation: spin 6s linear infinite; */
+
 }
 
 .logo:hover {
   transform: scale(1.1);
-  /* animation: spin 6s infinite; */
+
 }
 
 @keyframes spin {
@@ -331,37 +278,18 @@ text {
     stroke-dashoffset: 470;
     fill-opacity: 1;
   }
-  /* 10% {
-    stroke-dashoffset: 536.689453125;
-     fill-opacity: 0.9; 
-  } */
+
   100% {
     stroke-dashoffset: 100;
     fill-opacity: 1;
   }
 }
 
-.line-before {
-  position: relative;
-}
-
-.line-before::before {
-  content: "";
-  position: absolute;
-  top: -10px; /* adjust spacing above */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 2px;
-  opacity: 0.2;
-  background-color: white;
-}
-
 .logo-ps {
   stroke-dasharray: 170.74;
   animation: draw2 1.2s cubic-bezier(.33,.36,.84,.51), anim-fadein 0.15s 1.6s reverse forwards;
   fill: none;
-  /* transition: fill 2s ease-in; */
+
 }
 
 @keyframes draw2 {
@@ -371,7 +299,7 @@ text {
   }
   10% {
     stroke-dashoffset: 170.76522827148438;
-    /* fill-opacity: 0.9; */
+
   }
   100% {
     stroke-dashoffset: 41.936157226562;
@@ -423,16 +351,6 @@ text {
   }
 }
 
-/* .logo-ps {
-  stroke-dasharray: 170.60614013671875;
-  stroke-dashoffset: calc(80+42.586166381836);
-  
-} */
-
-/* :not(svg) {
-  transform-origin: 0px 0px;
-} */
-
 @media (max-width: 950px) {
   .introicon-wrap1{
     transform: translate(calc(50vw - 125px),calc(40vh - 20vh - 50px)) scale(0.8);
@@ -465,14 +383,12 @@ text {
   }
 }
 
-
-
 @media (min-width: 1125px) {
   .introicon-wrap1{
     transform: translate(calc(50vw - 450px), calc(50vh - 100px));;
     transform-origin: 125px 125px;
   }
- 
+
   .introtexts {
     transform: translate(calc(50vw - 450px), calc(50vh - 70px));
     fill:#000;
@@ -487,27 +403,5 @@ text {
 .home-main {
   top: -48px;
   position: relative;
-}
-
-@keyframes anim-linkout {
-  0% {
-    -webkit-clip-path: inset(0% 0% 0% 0% round 8px);
-    clip-path: inset(0% 0% 0% 0% round 8px);
-  }
-  100% {
-    -webkit-clip-path: inset(0% 0% 0% 100% round 8px);
-    clip-path: inset(0% 0% 0% 100% round 8px);
-  }
-}
-
-@supports ((-webkit-backdrop-filter: invert(1)) or (backdrop-filter:invert(1))) {
-  .link-animate ::after {
-    background: transparent;
-    mix-blend-mode: normal;
-    -webkit-backdrop-filter: invert(1);
-    backdrop-filter:invert(1);
-    animation: anim-linkout 0.2s forwards ease;
-    position: absolute;
-  }
 }
 

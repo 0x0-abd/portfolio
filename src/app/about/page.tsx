@@ -1,52 +1,33 @@
-"use client"
-
-import React from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faLinkedin } from '@fortawesome/free-brands-svg-icons'
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
+import IntroMask from '../components/IntroMask'
 
-// Updated array: Swapped Node to non-wordmark, added 'invert: true' for dark logos
+// Icons live in public/icons (devicon v2.16.0). NextJs is inlined below so it can be white; `invert` flips dark logos.
 const bits = [
-  { name: "React", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg", href: "https://react.dev/" },
-  { name: "NextJs", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original-wordmark.svg", href: "https://nextjs.org/" },
-  { name: "SpringBoot", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/spring/spring-original.svg", href: "https://spring.io/projects/spring-boot" },
-  { name: "NodeJs", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg", href: "https://nodejs.org/en" },
-  { name: "AWS", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-plain-wordmark.svg", href: "https://aws.amazon.com/", invert: true },
-  { name: "MySQL", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-plain-wordmark.svg", href: "https://www.mysql.com/", invert: true },
-  { name: "MongoDB", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg", href: "https://www.mongodb.com/" },
-  { name: "Redis", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg", href: "https://redis.io/" },
-  { name: "Docker", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg", href: "https://www.docker.com/" },
-  { name: "Kubernetes", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kubernetes/kubernetes-plain.svg", href: "https://kubernetes.io/" },
-  { name: "Jenkins", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jenkins/jenkins-original.svg", href: "https://www.jenkins.io/" },
-  { name: "Apache Airflow", link: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/apacheairflow/apacheairflow-original.svg", href: "https://airflow.apache.org/" },
+  { name: "React", icon: "/icons/react-original.svg", href: "https://react.dev/" },
+  { name: "NextJs", href: "https://nextjs.org/" },
+  { name: "SpringBoot", icon: "/icons/spring-original.svg", href: "https://spring.io/projects/spring-boot" },
+  { name: "NodeJs", icon: "/icons/nodejs-original.svg", href: "https://nodejs.org/en" },
+  { name: "AWS", icon: "/icons/amazonwebservices-plain-wordmark.svg", href: "https://aws.amazon.com/", invert: true },
+  { name: "MySQL", icon: "/icons/mysql-plain-wordmark.svg", href: "https://www.mysql.com/", invert: true },
+  { name: "MongoDB", icon: "/icons/mongodb-original.svg", href: "https://www.mongodb.com/" },
+  { name: "Redis", icon: "/icons/redis-original.svg", href: "https://redis.io/" },
+  { name: "Docker", icon: "/icons/docker-original.svg", href: "https://www.docker.com/" },
+  { name: "Kubernetes", icon: "/icons/kubernetes-plain.svg", href: "https://kubernetes.io/" },
+  { name: "Jenkins", icon: "/icons/jenkins-original.svg", href: "https://www.jenkins.io/" },
+  { name: "Apache Airflow", icon: "/icons/apacheairflow-original.svg", href: "https://airflow.apache.org/" },
 ]
+
+export const metadata: Metadata = { title: 'About' }
 
 export default function About() {
   return (
     <>
-      <title>Abhyuday Shukla | About</title>
-
-      {/* Background Mask */}
-      <div id="intro">
-        <svg xmlns="http://www.w3.org/2000/svg" className="fixed z-10 top-0 left-0 bottom-0 right-0 fill-none pointer-events-none h-full w-full" baseProfile="full" version="1.1">
-          <defs>
-            <mask id="mask-main-dark-inner" className="force-dark">
-              <rect className="fill-black w-screen h-screen"></rect>
-              <g className="intro-fadeout">
-                <rect className="mask-main-bg w-screen h-screen fill-white"></rect>
-              </g>
-              <g className="intro-wrap intro-fadeout">
-              </g>
-            </mask>
-          </defs>
-          <g className="intro-masked-wrap">
-            <rect className="intro-masked lght" width="100%" height="100%" mask="url(#mask-main-lght)"></rect>
-            <rect className="intro-masked dark" width="100%" height="100%" mask="url(#mask-main-dark-inner)"></rect>
-          </g>
-        </svg>
-      </div>
+      <IntroMask />
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-start py-20 px-6 lg:px-12">
         <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 text-white font-figtree">
@@ -158,12 +139,12 @@ export default function About() {
               
               <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-2 gap-6 sm:gap-8 gap-y-8 lg:gap-y-10 place-items-center w-full max-w-md bg-slate-900/30 p-6 lg:p-8 rounded-2xl border border-slate-800/50 shadow-2xl backdrop-blur-sm">
                 {bits.map((bit) => (
-                  bit.name !== "NextJs" ? (
+                  bit.icon ? (
                     <Link key={bit.name} href={bit.href} target="_blank" rel="noreferrer" className="group">
                       <Image
                         // Added conditional rendering for the Tailwind 'invert' class
                         className={`w-10 h-10 lg:w-12 lg:h-12 object-contain opacity-80 group-hover:opacity-100 transition-all duration-300 group-hover:scale-125 group-hover:-translate-y-2 group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ${bit.invert ? 'invert' : ''}`}
-                        src={bit.link}
+                        src={bit.icon}
                         alt={bit.name}
                         height={48}
                         width={48}
