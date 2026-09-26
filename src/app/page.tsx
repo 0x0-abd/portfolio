@@ -30,6 +30,10 @@ export default function Home() {
       <div id="intro" className='intro-home'>
         <svg xmlns="http://www.w3.org/2000/svg" className="fixed z-10 top-0 left-0 bottom-0 right-0 fill-none pointer-events-none h-full w-full" baseProfile="full" version="1.1">
           <defs>
+            {/* Dithered dark fill for the overlay; see .page-shade in globals.css. */}
+            <pattern id="shade-noise" width="64" height="64" patternUnits="userSpaceOnUse">
+              <image href="/shade-noise.png" width="64" height="64" style={{ imageRendering: "pixelated" }} />
+            </pattern>
             <clipPath id="clip-logo">
               <circle cx="150" cy="150" r="150.5" style={{ strokeWidth: "0" }}></circle>
             </clipPath>
@@ -73,7 +77,7 @@ export default function Home() {
                 <g className="intropart-wrap">
                   <g className="intropart introtexts">
                     <text className="header">Abhyuday Shukla</text>
-                    <text className="subheader">Creative Full-Stack Developer & Designer </text>
+                    <text className="subheader">Full Stack and Infra Engineer</text>
                   </g>
                 </g>
 
@@ -83,7 +87,6 @@ export default function Home() {
 
           </defs>
           <g className="intro-masked-wrap">
-            <rect className="intro-masked lght" width="100%" height="100%" mask="url(#mask-main-lght)"></rect>
             <rect className="intro-masked dark" width="100%" height="100%" mask="url(#mask-main-dark-inner)"></rect>
           </g>
         </svg>

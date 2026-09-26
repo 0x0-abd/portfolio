@@ -12,7 +12,7 @@ export default function AnimatedTabs() {
 
     return (
         <nav className="z-10 flex w-full justify-center left-0 top-0 pb-6 pt-6">
-            <div className="flex rounded fixed backdrop-blur-xl space-x-1 z-30 lg:space-x-4 ">
+            <div className="flex rounded-full fixed bg-[#11161a]/80 md:bg-transparent md:rounded md:backdrop-blur-xl space-x-1 z-30 lg:space-x-4">
                 {tabs.map((tab) => {
                     const isActive = pathName === tab.href;
                     return (

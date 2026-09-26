@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faLinkedin } from '@fortawesome/free-brands-svg-icons'
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
-import IntroMask from '../components/IntroMask'
+import PageShade from '../components/PageShade'
 
 // Icons live in public/icons (devicon v2.16.0). NextJs is inlined below so it can be white; `invert` flips dark logos.
 const bits = [
@@ -27,7 +27,7 @@ export const metadata: Metadata = { title: 'About' }
 export default function About() {
   return (
     <>
-      <IntroMask />
+      <PageShade />
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-start py-20 px-6 lg:px-12">
         <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 text-white font-figtree">
@@ -137,7 +137,7 @@ export default function About() {
           <div className="lg:col-span-5 relative pt-12 lg:pt-0">
             <div className="lg:sticky lg:top-32 flex items-start justify-center lg:justify-end">
               
-              <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-2 gap-6 sm:gap-8 gap-y-8 lg:gap-y-10 place-items-center w-full max-w-md bg-slate-900/30 p-6 lg:p-8 rounded-2xl border border-slate-800/50 shadow-2xl backdrop-blur-sm">
+              <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-2 gap-6 sm:gap-8 gap-y-8 lg:gap-y-10 place-items-center w-full max-w-md bg-slate-900/30 p-6 lg:p-8 rounded-2xl border border-slate-800/50 shadow-2xl">
                 {bits.map((bit) => (
                   bit.icon ? (
                     <Link key={bit.name} href={bit.href} target="_blank" rel="noreferrer" className="group">

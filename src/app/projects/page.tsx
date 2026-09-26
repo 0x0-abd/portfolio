@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import IntroMask from '../components/IntroMask'
+import PageShade from '../components/PageShade'
 
 const projects = [
   {
@@ -90,7 +90,7 @@ export const metadata: Metadata = { title: 'Projects' }
 export default function Projects() {
   return (
     <>
-      <IntroMask />
+      <PageShade />
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-start py-20 px-6 lg:px-12">
         <div className="w-full max-w-7xl font-figtree text-white">
@@ -104,7 +104,7 @@ export default function Projects() {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="group relative flex flex-col rounded-2xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-slate-700/80 hover:bg-slate-900/60 shadow-2xl"
+                className="group relative flex flex-col rounded-2xl border border-slate-800/60 bg-slate-900/40 overflow-hidden transition-all duration-300 hover:border-slate-700/80 hover:bg-slate-900/60 shadow-2xl"
               >
                 {/* Image or Placeholder */}
                 <div className="relative w-full h-52 overflow-hidden bg-slate-800/50">

@@ -1,98 +1,190 @@
 /// <reference types="@webgpu/types" />
 
-// 🟦 Shaders
-const vertWgsl = `
-struct VSOut {
-    @builtin(position) Position: vec4<f32>,
-    @location(0) color: vec3<f32>,
-    @location(1) uv: vec2<f32>
-};
+// Background look:
+//  "mosaic" – a fixed jagged pattern of small tiles (triangles, quads, pentagons), each one flat colour.
+//  "smooth" – a continuous gradient rendered small and stretched by the browser.
+// Change this one word to switch.
+const STYLE = "smooth" as "mosaic" | "smooth";
 
-@vertex
-fn main(@location(0) inPos: vec3<f32>) -> VSOut {
-    var vsOut: VSOut;
-    vsOut.Position = vec4<f32>(inPos, 1.0);
-    vsOut.uv = (inPos.xy * 0.5) + vec2<f32>(0.5, 0.5);
-    vsOut.color = vec3<f32>(inPos.x+1, inPos.y+1, 1);
-    return vsOut;
-}`
-const fragWgsl = `
-
+// Colour field shared by both styles. `pos` is clip space + 1 (0..2 on x and y).
+const colorWgsl = `
 struct Uniforms {
-    colorChangeMatrix: vec3<f32>,
-    time: f32,
+    // sin(t / 5s): slowly swings -1..1 and drives every colour channel.
+    phase: f32,
 }
 
 @binding(0) @group(0) var<uniform> uniforms: Uniforms;
-@group(0) @binding(1) var<uniform> mousePos : vec4<f32>;
 
 fn getRed(pos: vec3<f32>) -> f32 {
-    let ans = f32(0.70 + 0.30*cos(((pos.x*pos.x)-(pos.y*pos.y)) + uniforms.colorChangeMatrix.x * 20));
+    let ans = f32(0.70 + 0.30*cos(((pos.x*pos.x)-(pos.y*pos.y)) + uniforms.phase * 20));
     return ans;
 }
 
 fn getGreen(pos: vec3<f32>) -> f32 {
-    let ans = f32(0.70 + 0.30*sin((pos.x*pos.x*cos(uniforms.colorChangeMatrix.x * 20/4)) + (pos.y*pos.y*sin(uniforms.colorChangeMatrix.x*20/2))));
+    let ans = f32(0.70 + 0.30*sin((pos.x*pos.x*cos(uniforms.phase * 20/4)) + (pos.y*pos.y*sin(uniforms.phase*20/2))));
     return ans;
 }
 
 fn getBlue(pos: vec3<f32>) -> f32 {
-    let ans = f32(0.70 + 0.30*sin((5*sin(uniforms.colorChangeMatrix.x*20/9))+ ((pos.x*pos.x)+(pos.y*pos.y))/1));
+    let ans = f32(0.70 + 0.30*sin((5*sin(uniforms.phase*20/9))+ ((pos.x*pos.x)+(pos.y*pos.y))/1));
     return ans;
 }
 
-fn animatedDither(pos: vec2<f32>, time: f32) -> f32 {
-    return fract(sin(dot(pos.xy + time ,vec2<f32>(12.9898,78.233))) * 43758.5453);
-}
-
-fn getMouseDist(uv: vec2<f32>) -> f32 {
-    let dx = (uv.x-mousePos.x)*mousePos.z;
-    let dy = (uv.y-mousePos.y);
-    return sqrt(dx*dx + dy*dy);
-}
-
-@fragment
-fn main(@location(0) inColor: vec3<f32>,
-        @location(1) uv: vec2<f32>) -> @location(0) vec4<f32> {
-
-    let baseColor = vec3<f32>(
-        getRed(inColor),
-        getGreen(inColor),
-        getBlue(inColor)
-    );
-    let dist = getMouseDist(uv);
-    let pulses = array<vec4<f32>, 3>(
-        vec4<f32>(0.0,  2.0, 8.0, 3.0),
-        vec4<f32>(0.3,  2.5, 4.0, 4.0),
-        vec4<f32>(0.6,  3.0,  3.0, 5.0)
-    );
-    var wave: f32 = 0.0;
-    let wavenoise = sin(uv.x * 50.0 + uniforms.time * 2.0) * sin(uv.y * 50.0 + uniforms.time * 1.5);
-    let deform = 1.0 + 0.15 * wavenoise;
-    let distortedDist = dist * deform;
-    for (var i = 0u; i < 3u; i = i + 1u) {
-        let p = pulses[i];
-        // t_p = normalized time since this pulse “fired”
-        let t_p = uniforms.time * p.y - p.x;
-        // only contribute when t_p > d (wavefront has passed)
-        if (t_p > distortedDist) {
-            let phase = (distortedDist * p.z) - (uniforms.time * p.y);
-            let envelope = exp(-distortedDist * p.w);
-            wave = wave + sin(phase) * envelope;
-        }
-    }
-    let noise = animatedDither(inColor.xy, uniforms.time) * 0.05; // small noise
-
-    let finalColor = mix(baseColor, vec3<f32>(0.3, 0.6, 0.9) * wave, 0.1) + noise;
-    return vec4<f32>(finalColor, 1.0);
+// 0.9 keeps the brightness the old cursor-ripple mix (10% towards black) produced.
+fn fieldColor(pos: vec3<f32>) -> vec3<f32> {
+    return vec3<f32>(getRed(pos), getGreen(pos), getBlue(pos)) * 0.9;
 }`
 
-const positions = new Float32Array([
-    1.0, 1.0, 0.0,
-    -1.0, 1.0, 0.0,
-    1.0, -1.0, 0.0,
-    -1.0, -1.0, 0.0
-]);
+// Smooth: the colour is evaluated per pixel.
+const smoothVertWgsl = `
+struct VSOut {
+    @builtin(position) Position: vec4<f32>,
+    @location(0) color: vec3<f32>
+};
+
+@vertex
+fn main(@location(0) inPos: vec2<f32>) -> VSOut {
+    var vsOut: VSOut;
+    vsOut.Position = vec4<f32>(inPos, 0.0, 1.0);
+    vsOut.color = vec3<f32>(inPos.x+1, inPos.y+1, 1);
+    return vsOut;
+}`
+const smoothFragWgsl = colorWgsl + `
+@fragment
+fn main(@location(0) inColor: vec3<f32>) -> @location(0) vec4<f32> {
+    return vec4<f32>(fieldColor(inColor), 1.0);
+}`
+
+// Mosaic, step 1 (compute): one invocation per tile works out that tile's colour at its centre.
+const MOSAIC_WORKGROUP = 64;
+const mosaicComputeWgsl = colorWgsl + `
+@group(0) @binding(1) var<storage, read> centres: array<vec2<f32>>;
+@group(0) @binding(2) var<storage, read_write> colors: array<vec4<f32>>;
+
+@compute @workgroup_size(${MOSAIC_WORKGROUP})
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+    let tile = id.x;
+    if (tile >= arrayLength(&centres)) {
+        return;
+    }
+    colors[tile] = vec4<f32>(fieldColor(vec3<f32>(centres[tile] + vec2<f32>(1.0, 1.0), 1.0)), 1.0);
+}`
+
+// Mosaic, step 2 (draw): each vertex just looks up its tile's colour; pixels copy it unchanged.
+const mosaicVertWgsl = `
+@group(0) @binding(0) var<storage, read> colors: array<vec4<f32>>;
+
+struct VSOut {
+    @builtin(position) Position: vec4<f32>,
+    @location(0) @interpolate(flat) color: vec3<f32>
+};
+
+@vertex
+fn main(@location(0) inPos: vec2<f32>, @location(1) tile: u32) -> VSOut {
+    var vsOut: VSOut;
+    vsOut.Position = vec4<f32>(inPos, 0.0, 1.0);
+    vsOut.color = colors[tile].rgb;
+    return vsOut;
+}`
+const mosaicFragWgsl = `
+@fragment
+fn main(@location(0) @interpolate(flat) color: vec3<f32>) -> @location(0) vec4<f32> {
+    return vec4<f32>(color, 1.0);
+}`
+
+const TILE = 32;     // CSS px between grid points, so tiles are roughly this size
+const JITTER = 0.23; // max point offset as a fraction of TILE; below 0.25 every tile stays convex
+
+// Deterministic 0..1 hash, so the pattern is identical on every visit and after resizes.
+function rand(i: number, j: number, k: number) {
+    let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 1274126177);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+}
+
+type Point = [number, number];
+
+interface Geometry {
+    vertices: ArrayBuffer; // per vertex: clip x, y (f32) and, for the mosaic, a tile index (u32)
+    stride: number;        // bytes per vertex
+    vertexCount: number;
+    centres?: Float32Array; // mosaic only: clip-space centre of each tile
+}
+
+// Jittered grid; each cell becomes a quad, two triangles, or a triangle notch plus a pentagon.
+// Cells only ever share whole edges, so there are no cracks between tiles.
+function buildMosaic(width: number, height: number): Geometry {
+    const cols = Math.ceil(width / TILE) + 1;
+    const rows = Math.ceil(height / TILE) + 1;
+    // Points on the top/left edges stay on the edge so tiles always reach the screen corner.
+    const point = (i: number, j: number): Point => [
+        i * TILE + (i === 0 ? 0 : (rand(i, j, 1) - 0.5) * 2 * JITTER * TILE),
+        j * TILE + (j === 0 ? 0 : (rand(i, j, 2) - 0.5) * 2 * JITTER * TILE),
+    ];
+    const toClip = ([x, y]: Point): Point => [(x / width) * 2 - 1, 1 - (y / height) * 2];
+    const positions: number[] = [];
+    const tileIds: number[] = [];
+    const centres: number[] = [];
+
+    const addTile = (shape: Point[]) => {
+        const tile = centres.length / 2;
+        centres.push(...toClip([
+            shape.reduce((sum, p) => sum + p[0], 0) / shape.length,
+            shape.reduce((sum, p) => sum + p[1], 0) / shape.length,
+        ]));
+        // Fan from the first point; every shape below is visible in full from it.
+        for (let k = 1; k + 1 < shape.length; k++) {
+            for (const p of [shape[0], shape[k], shape[k + 1]]) {
+                positions.push(...toClip(p));
+                tileIds.push(tile);
+            }
+        }
+    };
+
+    for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+            // Rotate the corners so the split direction / notched edge varies per cell.
+            const turn = Math.floor(rand(i, j, 4) * 4);
+            const corners = [point(i, j), point(i + 1, j), point(i + 1, j + 1), point(i, j + 1)];
+            const [a, b, c, d] = [0, 1, 2, 3].map((n) => corners[(n + turn) % 4]);
+            const kind = rand(i, j, 3);
+
+            if (kind < 0.4) {
+                addTile([a, b, c, d]);
+            } else if (kind < 0.8) {
+                addTile([a, b, c]);
+                addTile([a, c, d]);
+            } else {
+                // Notch point halfway between edge a-b's midpoint and the cell centre.
+                const p: Point = [
+                    (a[0] + b[0]) / 4 + (a[0] + b[0] + c[0] + d[0]) / 8,
+                    (a[1] + b[1]) / 4 + (a[1] + b[1] + c[1] + d[1]) / 8,
+                ];
+                addTile([p, a, b]);
+                addTile([p, b, c, d, a]);
+            }
+        }
+    }
+
+    const stride = 12;
+    const vertices = new ArrayBuffer(tileIds.length * stride);
+    const asFloat = new Float32Array(vertices);
+    const asUint = new Uint32Array(vertices);
+    for (let v = 0; v < tileIds.length; v++) {
+        asFloat[v * 3] = positions[v * 2];
+        asFloat[v * 3 + 1] = positions[v * 2 + 1];
+        asUint[v * 3 + 2] = tileIds[v];
+    }
+    return { vertices, stride, vertexCount: tileIds.length, centres: new Float32Array(centres) };
+}
+
+// Smooth: one full-screen quad (two triangles).
+const FULLSCREEN: Geometry = {
+    vertices: new Float32Array([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]).buffer,
+    stride: 8,
+    vertexCount: 6,
+};
 
 class Renderer {
     canvas: HTMLCanvasElement;
@@ -108,29 +200,25 @@ class Renderer {
     colorTexture!: GPUTexture;
     colorTextureView!: GPUTextureView;
 
-    // Bing Group
-    uniformBindGroup!: GPUBindGroup;
-
     // Resources
     uniformBuffer!: GPUBuffer;
-    mouseMovementBuffer!: GPUBuffer;
-    positionBuffer!: GPUBuffer;
-    vertModule!: GPUShaderModule;
-    fragModule!: GPUShaderModule;
+    positionBuffer?: GPUBuffer;
+    private centreBuffer?: GPUBuffer; // mosaic: tile centres (fixed until the next resize)
+    private colorBuffer?: GPUBuffer;  // mosaic: tile colours, rewritten by the compute pass each frame
+    private vertexCount = 0;
+    private tileCount = 0;
     pipeline!: GPURenderPipeline;
+    private computePipeline?: GPUComputePipeline;
+    private renderBindGroup?: GPUBindGroup;
+    private computeBindGroup?: GPUBindGroup;
 
     startTime: number;
-    mouse: [number, number];
-
-    commandEncoder!: GPUCommandEncoder;
-    passEncoder!: GPURenderPassEncoder;
 
     private animationFrameId: number | null = null;
     private isDestroyed = false;
     private needsResize = true;
     private resizeObserver: ResizeObserver;
     private readonly colorUniformData = new Float32Array(4);
-    private readonly mouseUniformData = new Float32Array(4);
     private readonly onResize = () => {
         this.needsResize = true;
         // Reduced motion only draws one frame, so redraw it at the new size.
@@ -143,7 +231,6 @@ class Renderer {
             this.render();
         }
     };
-    private onMouseMove?: (event: MouseEvent) => void;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -152,24 +239,6 @@ class Renderer {
         this.resizeObserver.observe(this.canvas);
         window.addEventListener("resize", this.onResize);
         document.addEventListener("visibilitychange", this.onVisibilityChange);
-
-        let mouse = this.mouse = [0.5, 0.5];
-        let lastUpdate = 0;
-
-        if (window.matchMedia("(min-width: 768px)").matches) {
-            this.onMouseMove = e => {
-                if (!this.canvas) return;
-                const now = performance.now();
-                if (now - lastUpdate < 50) return;
-                lastUpdate = now;
-
-                const rect = this.canvas.getBoundingClientRect();
-                mouse[0] = (e.clientX - rect.left) / rect.width;
-                mouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
-                // console.log(`X: ${this.mouse[0]}, Y: ${this.mouse[1]}`)
-            };
-            document.addEventListener("mousemove", this.onMouseMove, { passive: true });
-        }
     }
 
     async start() {
@@ -178,6 +247,7 @@ class Renderer {
                 if (this.isDestroyed) return;
                 console.warn("WebGPU device lost:", info.message);
                 this.canvas.style.display = "none";
+                this.destroy();
             });
             this.resizeBackings();
 
@@ -216,142 +286,117 @@ class Renderer {
     }
 
     async initialiseResources() {
-        // Buffers
-        let createBuffer = (arr: Float32Array | Uint16Array, usage: number) => {
-            let desc = {
-                size: (arr.byteLength + 3) & ~3,
-                usage,
-                mappedAtCreation: true
-            };
-            let buffer = this.device.createBuffer(desc);
-            const writeArray = arr instanceof Uint16Array ? new Uint16Array(buffer.getMappedRange()) : new Float32Array(buffer.getMappedRange());
-            writeArray.set(arr);
-            buffer.unmap();
-            return buffer;
-        };
-        const uniformBufferSize = 4 * 4;
         this.uniformBuffer = this.device.createBuffer({
-            size: uniformBufferSize,
+            size: 4 * 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
-        const mouseMovementBufferSize = 4 * 4;
-        this.mouseMovementBuffer = this.device.createBuffer({
-            size: mouseMovementBufferSize,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        const mosaic = STYLE === "mosaic";
+        const attributes: GPUVertexAttribute[] = [{ shaderLocation: 0, offset: 0, format: 'float32x2' }]; // clip position
+        if (mosaic) attributes.push({ shaderLocation: 1, offset: 4 * 2, format: 'uint32' });             // tile index
+        const vertexLayout: GPUVertexBufferLayout = { attributes, arrayStride: mosaic ? 12 : 8, stepMode: 'vertex' };
+
+        this.pipeline = this.device.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+                module: this.device.createShaderModule({ code: mosaic ? mosaicVertWgsl : smoothVertWgsl }),
+                entryPoint: 'main',
+                buffers: [vertexLayout],
+            },
+            fragment: {
+                module: this.device.createShaderModule({ code: mosaic ? mosaicFragWgsl : smoothFragWgsl }),
+                entryPoint: 'main',
+                targets: [{ format: this.canvasFormat, writeMask: GPUColorWrite.ALL }],
+            },
+            primitive: { topology: 'triangle-list', cullMode: 'none' },
         });
 
-        this.positionBuffer = createBuffer(positions, GPUBufferUsage.VERTEX);
-
-        const vsmDesc: any = {
-            code: vertWgsl
-        };
-        this.vertModule = this.device.createShaderModule(vsmDesc);
-
-        const fsmDesc: any = {
-            code: fragWgsl
-        };
-        this.fragModule = this.device.createShaderModule(fsmDesc);
-
-        // Graphics Pipelining
-
-        // Input Assembly
-        const positionAttributeDesc: GPUVertexAttribute = {
-            shaderLocation: 0,
-            offset: 0,
-            format: 'float32x3'
-        };
-        const positionBufferDesc: GPUVertexBufferLayout = {
-            attributes: [positionAttributeDesc],
-            arrayStride: 4 * 3,
-            stepMode: 'vertex'
-        };
-        // Uniform Data
-        const bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [{
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: {}
-            }, {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: {}
-            }]
-        })
-
-        const pipelineLayoutDesc = { bindGroupLayouts: [bindGroupLayout] };
-        const layout = this.device.createPipelineLayout(pipelineLayoutDesc);
-
-        // Shader Stages
-        const vertex: GPUVertexState = {
-            module: this.vertModule,
-            entryPoint: 'main',
-            buffers: [positionBufferDesc]
-        };
-
-        // Color/Blend State
-        const colorState: GPUColorTargetState = {
-            format: this.canvasFormat,
-            writeMask: GPUColorWrite.ALL
-        }
-        const fragment: GPUFragmentState = {
-            module: this.fragModule,
-            entryPoint: 'main',
-            targets: [colorState]
+        if (mosaic) {
+            this.computePipeline = this.device.createComputePipeline({
+                layout: 'auto',
+                compute: { module: this.device.createShaderModule({ code: mosaicComputeWgsl }), entryPoint: 'main' },
+            });
         }
 
-        // Rasterisation
-        const primitive: GPUPrimitiveState = {
-            frontFace: 'cw',
-            cullMode: 'none',
-            topology: 'triangle-strip'
-        };
+        this.createBindGroups();
+    }
 
-        const pipelineDesc: GPURenderPipelineDescriptor = {
-            layout,
-
-            vertex,
-            fragment,
-
-            primitive
-        };
-
-        this.pipeline = this.device.createRenderPipeline(pipelineDesc);
-
-        // Create bind group once here so encodeCommands can reuse it every frame
-        this.uniformBindGroup = this.device.createBindGroup({
-            layout: this.pipeline.getBindGroupLayout(0),
-            entries: [
-                {
-                    binding: 0,
-                    resource: { buffer: this.uniformBuffer },
-                },
-                {
-                    binding: 1,
-                    resource: { buffer: this.mouseMovementBuffer },
-                },
-            ]
-        });
+    // Bind groups point at specific buffers, so they are recreated whenever the geometry is rebuilt.
+    private createBindGroups() {
+        if (!this.pipeline) return;
+        if (STYLE === "mosaic") {
+            this.computeBindGroup = this.device.createBindGroup({
+                layout: this.computePipeline!.getBindGroupLayout(0),
+                entries: [
+                    { binding: 0, resource: { buffer: this.uniformBuffer } },
+                    { binding: 1, resource: { buffer: this.centreBuffer! } },
+                    { binding: 2, resource: { buffer: this.colorBuffer! } },
+                ],
+            });
+            this.renderBindGroup = this.device.createBindGroup({
+                layout: this.pipeline.getBindGroupLayout(0),
+                entries: [{ binding: 0, resource: { buffer: this.colorBuffer! } }],
+            });
+        } else {
+            this.renderBindGroup = this.device.createBindGroup({
+                layout: this.pipeline.getBindGroupLayout(0),
+                entries: [{ binding: 0, resource: { buffer: this.uniformBuffer } }],
+            });
+        }
     }
 
     private getRenderSize() {
         const cssWidth = this.canvas.clientWidth;
         const cssHeight = this.canvas.clientHeight;
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        const baseScale = window.innerWidth > 768 ? 0.6 : 0.8;
-        const desiredScale = baseScale * dpr;
-        const maxPixels = 2_000_000;
-        const desiredPixels = cssWidth * cssHeight * desiredScale * desiredScale;
-        const cap = desiredPixels > maxPixels ? Math.sqrt(maxPixels / desiredPixels) : 1;
-        const scale = desiredScale * cap;
 
+        if (STYLE === "smooth") {
+            // The gradient is so smooth that ~1 shaded pixel per 8x8 CSS pixels is indistinguishable
+            // once the browser stretches it, e.g. 48x105 on a phone instead of ~470x1000.
+            return {
+                width: Math.max(16, Math.ceil(cssWidth / 8)),
+                height: Math.max(16, Math.ceil(cssHeight / 8)),
+            };
+        }
+
+        // Mosaic needs real resolution for crisp tile edges, but each pixel only copies its tile's colour.
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const maxPixels = 4_000_000;
+        const cap = Math.min(1, Math.sqrt(maxPixels / Math.max(1, cssWidth * cssHeight * dpr * dpr)));
         return {
-            width: Math.max(1, Math.floor(cssWidth * scale)),
-            height: Math.max(1, Math.floor(cssHeight * scale)),
+            width: Math.max(1, Math.floor(cssWidth * dpr * cap)),
+            height: Math.max(1, Math.floor(cssHeight * dpr * cap)),
         };
     }
 
-    // The canvas is stretched by CSS; its backing store is deliberately capped.
+    private createFilledBuffer(data: ArrayBuffer, usage: number) {
+        const buffer = this.device.createBuffer({ size: data.byteLength, usage, mappedAtCreation: true });
+        new Uint8Array(buffer.getMappedRange()).set(new Uint8Array(data));
+        buffer.unmap();
+        return buffer;
+    }
+
+    // Tile geometry is laid out in CSS pixels, so it is rebuilt whenever the canvas size changes.
+    private uploadGeometry() {
+        if (STYLE === "smooth" && this.positionBuffer) return;
+        const geometry = STYLE === "mosaic"
+            ? buildMosaic(Math.max(1, this.canvas.clientWidth), Math.max(1, this.canvas.clientHeight))
+            : FULLSCREEN;
+
+        this.positionBuffer?.destroy();
+        this.positionBuffer = this.createFilledBuffer(geometry.vertices, GPUBufferUsage.VERTEX);
+        this.vertexCount = geometry.vertexCount;
+
+        if (geometry.centres) {
+            this.centreBuffer?.destroy();
+            this.colorBuffer?.destroy();
+            this.tileCount = geometry.centres.length / 2;
+            this.centreBuffer = this.createFilledBuffer(geometry.centres.buffer as ArrayBuffer, GPUBufferUsage.STORAGE);
+            this.colorBuffer = this.device.createBuffer({ size: this.tileCount * 16, usage: GPUBufferUsage.STORAGE });
+            this.createBindGroups();
+        }
+    }
+
+    // The canvas is stretched by CSS to fill the screen.
     resizeBackings() {
         const { width, height } = this.getRenderSize();
         this.canvas.width = width;
@@ -370,78 +415,50 @@ class Renderer {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT,
             });
         }
+
+        this.uploadGeometry();
     }
 
     encodeCommands(now: number) {
-        let colorAttachment: GPURenderPassColorAttachment = {
+        this.updateUniforms(now);
+        this.queue.writeBuffer(this.uniformBuffer, 0, this.colorUniformData);
+
+        const encoder = this.device.createCommandEncoder();
+
+        if (this.computePipeline) {
+            const compute = encoder.beginComputePass();
+            compute.setPipeline(this.computePipeline);
+            compute.setBindGroup(0, this.computeBindGroup!);
+            compute.dispatchWorkgroups(Math.ceil(this.tileCount / MOSAIC_WORKGROUP));
+            compute.end();
+        }
+
+        const target: GPURenderPassColorAttachment = {
             view: this.colorTextureView,
             clearValue: { r: 0, g: 0, b: 0, a: 1 },
             loadOp: 'clear',
-            storeOp: 'store'
+            storeOp: 'store',
         };
+        const pass = encoder.beginRenderPass({ colorAttachments: [target] });
+        pass.setPipeline(this.pipeline);
+        pass.setBindGroup(0, this.renderBindGroup!);
+        pass.setViewport(0, 0, this.canvas.width, this.canvas.height, 0, 1);
+        pass.setScissorRect(0, 0, this.canvas.width, this.canvas.height);
+        pass.setVertexBuffer(0, this.positionBuffer!);
+        pass.draw(this.vertexCount, 1);
+        pass.end();
 
-        const renderPassDesc: GPURenderPassDescriptor = {
-            colorAttachments: [colorAttachment]
-        }
-
-        this.updateUniforms(now);
-
-        this.queue.writeBuffer(
-            this.uniformBuffer,
-            0,
-            this.colorUniformData
-        );
-
-        this.queue.writeBuffer(
-            this.mouseMovementBuffer,
-            0,
-            this.mouseUniformData
-        );
-
-        this.commandEncoder = this.device.createCommandEncoder();
-
-        // Encoding draw commands
-        this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
-        this.passEncoder.setPipeline(this.pipeline);
-        this.passEncoder.setBindGroup(0, this.uniformBindGroup);
-        this.passEncoder.setViewport(
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height,
-            0,
-            1
-        );
-
-        this.passEncoder.setScissorRect(
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
-        );
-        this.passEncoder.setVertexBuffer(0, this.positionBuffer);
-        this.passEncoder.draw(4, 1);
-        this.passEncoder.end();
-
-        this.queue.submit([this.commandEncoder.finish()]);
+        this.queue.submit([encoder.finish()]);
     }
 
     private updateUniforms(now: number) {
         this.colorUniformData[0] = Math.sin(now / 5000);
-        this.colorUniformData[1] = Math.sin(2 * Math.PI / 3 + now / 300);
-        this.colorUniformData[2] = Math.sin(4 * Math.PI / 3 + now / 600);
-        this.colorUniformData[3] = now / 1000;
-
-        const aspect = this.canvas.clientWidth / Math.max(1, this.canvas.clientHeight);
-        this.mouseUniformData[0] = this.mouse[0];
-        this.mouseUniformData[1] = this.mouse[1];
-        this.mouseUniformData[2] = aspect;
-        this.mouseUniformData[3] = 0;
     }
 
     private lastFrame = 0;
     private readonly reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    private readonly interval = 1000 / 24;
+    // The colours take ~30s to cycle, so 20fps is plenty smooth.
+    private readonly interval = 1000 / 20;
 
     render = () => {
         this.animationFrameId = null;
@@ -449,13 +466,15 @@ class Renderer {
         if (this.isDestroyed || document.hidden || !this.pipeline) return;
 
         const now = performance.now();
+        const elapsed = now - this.lastFrame;
 
-        if (!this.reducedMotion && now - this.lastFrame < this.interval) {
+        if (!this.reducedMotion && elapsed < this.interval) {
             this.animationFrameId = requestAnimationFrame(this.render);
             return;
         }
 
-        this.lastFrame = now;
+        // Carry the remainder over so frames don't drift a vsync late (18fps instead of 20).
+        this.lastFrame = now - (elapsed % this.interval);
 
         if (!this.startTime)
             this.startTime = now;
@@ -488,13 +507,11 @@ class Renderer {
         this.resizeObserver.disconnect();
         window.removeEventListener("resize", this.onResize);
         document.removeEventListener("visibilitychange", this.onVisibilityChange);
-        if (this.onMouseMove) {
-            document.removeEventListener("mousemove", this.onMouseMove);
-        }
 
         this.uniformBuffer?.destroy();
-        this.mouseMovementBuffer?.destroy();
         this.positionBuffer?.destroy();
+        this.centreBuffer?.destroy();
+        this.colorBuffer?.destroy();
         this.device?.destroy();
     }
 }
@@ -505,5 +522,3 @@ export async function startWebGpuBackground(canvas: HTMLCanvasElement) {
 
   return () => renderer.destroy?.();
 }
-
-// export {}
