@@ -215,6 +215,7 @@ class Renderer {
     startTime: number;
 
     private animationFrameId: number | null = null;
+    private timerId: ReturnType<typeof setTimeout> | null = null;
     private isDestroyed = false;
     private needsResize = true;
     private resizeObserver: ResizeObserver;
@@ -222,15 +223,19 @@ class Renderer {
     private readonly onResize = () => {
         this.needsResize = true;
         // Reduced motion only draws one frame, so redraw it at the new size.
-        if (this.reducedMotion && this.animationFrameId === null && !this.isDestroyed) {
+        if (this.reducedMotion && !this.framePending() && !this.isDestroyed) {
             this.animationFrameId = requestAnimationFrame(this.render);
         }
     };
     private readonly onVisibilityChange = () => {
-        if (!document.hidden && !this.isDestroyed && this.animationFrameId === null) {
+        if (!document.hidden && !this.isDestroyed && !this.framePending()) {
             this.render();
         }
     };
+
+    private framePending() {
+        return this.animationFrameId !== null || this.timerId !== null;
+    }
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -360,7 +365,7 @@ class Renderer {
 
         // Mosaic needs real resolution for crisp tile edges, but each pixel only copies its tile's colour.
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const maxPixels = 4_000_000;
+        const maxPixels = 2560 * 1440; // never render more than 1440p ("2K"), even on 4K screens
         const cap = Math.min(1, Math.sqrt(maxPixels / Math.max(1, cssWidth * cssHeight * dpr * dpr)));
         return {
             width: Math.max(1, Math.floor(cssWidth * dpr * cap)),
@@ -455,10 +460,23 @@ class Renderer {
         this.colorUniformData[0] = Math.sin(now / 5000);
     }
 
-    private lastFrame = 0;
+    private nextFrameAt = 0;
     private readonly reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // The colours take ~30s to cycle, so 20fps is plenty smooth.
     private readonly interval = 1000 / 20;
+    // Wake this much before a frame is due; the requestAnimationFrame that follows lands on the next
+    // vsync (<= 16.7ms at 60Hz), so on average frames arrive on time instead of up to a vsync late.
+    private readonly wakeEarly = 8;
+
+    // Sleep on a timer until the next frame is due, then draw on the following vsync. Polling with
+    // requestAnimationFrame instead would wake up on every refresh (up to 144/s) just to skip it.
+    private scheduleNextFrame() {
+        const delay = Math.max(0, this.nextFrameAt - performance.now() - this.wakeEarly);
+        this.timerId = setTimeout(() => {
+            this.timerId = null;
+            this.animationFrameId = requestAnimationFrame(this.render);
+        }, delay);
+    }
 
     render = () => {
         this.animationFrameId = null;
@@ -466,15 +484,8 @@ class Renderer {
         if (this.isDestroyed || document.hidden || !this.pipeline) return;
 
         const now = performance.now();
-        const elapsed = now - this.lastFrame;
-
-        if (!this.reducedMotion && elapsed < this.interval) {
-            this.animationFrameId = requestAnimationFrame(this.render);
-            return;
-        }
-
-        // Carry the remainder over so frames don't drift a vsync late (18fps instead of 20).
-        this.lastFrame = now - (elapsed % this.interval);
+        // Keep a fixed 20fps schedule; after a stall (e.g. the tab was hidden) restart it from now.
+        this.nextFrameAt = now - this.nextFrameAt > this.interval ? now + this.interval : this.nextFrameAt + this.interval;
 
         if (!this.startTime)
             this.startTime = now;
@@ -493,7 +504,7 @@ class Renderer {
 
         this.encodeCommands(time);
 
-        if (!this.reducedMotion) this.animationFrameId = requestAnimationFrame(this.render);
+        if (!this.reducedMotion) this.scheduleNextFrame();
     };
 
     destroy() {
@@ -502,6 +513,10 @@ class Renderer {
         if (this.animationFrameId !== null) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
+        }
+        if (this.timerId !== null) {
+            clearTimeout(this.timerId);
+            this.timerId = null;
         }
 
         this.resizeObserver.disconnect();
